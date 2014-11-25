@@ -1,0 +1,46 @@
+# Necessary for ED
+visualize: 1
+world_name: none
+
+plugins:
+- name: simulator
+  lib: libed_simulator_plugin.so
+  parameters:
+    robot:
+        urdf: /home/sdries/ros/hydro/system/src/amigo_description/urdf/amigo.urdf
+        pose: {x: 0, y: 0, z: 0}   # Does not yet work
+        sensors:
+            - type: depth_sensor
+              link: top_kinect/openni_rgb_optical_frame
+              parameters:
+                  depth:
+                      width: 640
+                      height: 480
+                      fx: 558
+                      fy: 558
+                  rgb:
+                      width: 640
+                      height: 480
+                  rgb_topic: /amigo/top_kinect/rgb/image_color
+                  rgb_info_topic: /amigo/top_kinect/rgb/camera_info
+                  depth_topic: /amigo/top_kinect/depth_registred/image
+                  depth_info_topic: /amigo/top_kinect/depth_registered/camera_info
+                  rgbd_topic: /amigo/top_kinect/rgbd
+                  frame_id: /amigo/top_kinect/openni_rgb_optical_frame
+            - type: lrf
+              link: base_laser
+            - type: lrf
+              link: torso_laser
+        joints:
+            - name: torso_joint
+              position: 0.4
+            - name: neck_pan_joint
+              position: 0.5
+            - name: neck_tilt_joint
+              position: 0.1
+
+    objects:
+        - id: walls
+          type: rwc2014.walls
+          pose: {x: -1.83, y: -0.645, z: 0}
+
