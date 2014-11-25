@@ -19,19 +19,15 @@
 
 void addToUpdateRequest(const sim::ObjectConstPtr& obj, ed::UpdateRequest& req)
 {
-    ed::EntityPtr e(new ed::Entity(obj->id()));
 //    e->setPose(obj->pose());
-    e->setType(obj->type());
-    e->setShape(obj->shape());
-
-    req.setEntity(e);
+    req.setType(obj->id(), obj->type());
+    req.setShape(obj->id(),  obj->shape());
 }
 
 // ----------------------------------------------------------------------------------------------------
 
 SimulatorPlugin::SimulatorPlugin() : reconfigured_(false)
 {
-    std::cout << "INIT" << std::endl;
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -103,15 +99,13 @@ bool SimulatorPlugin::srvSetEntity(ed::SetEntity::Request& req, ed::SetEntity::R
         ed::models::NewEntityConstPtr e_created = ed::models::create(req.type, tue::Configuration(), req.id);
         if (e_created && e_created->shape)
         {
-            ed::EntityPtr e(new ed::Entity(req.id, req.type));
-            e->setShape(e_created->shape);
-
-            // Set the pose
+            // Deserialize pose
             geo::Pose3D pose;
             geo::convert(req.pose, pose);
-            e->setPose(pose);
 
-            update_req_->setEntity(e);
+            update_req_->setShape(req.id, e_created->shape);
+            update_req_->setType(req.id, req.type);
+            update_req_->setPose(req.id, pose);
         }
         else
         {
@@ -137,10 +131,7 @@ bool SimulatorPlugin::srvSetEntity(ed::SetEntity::Request& req, ed::SetEntity::R
             geo::Pose3D new_pose;
             geo::convert(req.pose, new_pose);
 
-            ed::EntityPtr e_new(new ed::Entity(*e));
-            e_new->setPose(new_pose);
-
-            update_req_->setEntity(e_new);
+            update_req_->setPose(e->id(), new_pose);
         }
         else
         {
