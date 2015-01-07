@@ -6,6 +6,7 @@
 #include <ed/world_model.h>
 #include <ed/update_request.h>
 #include <ed/models/models.h>
+#include <ed/relations/transform_cache.h>
 
 #include <ros/node_handle.h>
 #include <ros/advertise_service_options.h>
@@ -96,21 +97,8 @@ bool SimulatorPlugin::srvSetEntity(ed::SetEntity::Request& req, ed::SetEntity::R
 {
     if (req.action == ed::SetEntity::Request::ADD)
     {
-        ed::models::NewEntityConstPtr e_created = ed::models::create(req.type, tue::Configuration(), req.id);
-        if (e_created && e_created->shape)
-        {
-            // Deserialize pose
-            geo::Pose3D pose;
-            geo::convert(req.pose, pose);
-
-            update_req_->setShape(req.id, e_created->shape);
-            update_req_->setType(req.id, req.type);
-            update_req_->setPose(req.id, pose);
-        }
-        else
-        {
+        if (!ed::models::create(req.id, req.type, *update_req_))
             res.error_msg = "No shape could be loaded for type '" + req.type + "'.";
-        }
     }
     else if (req.action == ed::SetEntity::Request::DELETE)
     {
@@ -131,7 +119,11 @@ bool SimulatorPlugin::srvSetEntity(ed::SetEntity::Request& req, ed::SetEntity::R
             geo::Pose3D new_pose;
             geo::convert(req.pose, new_pose);
 
-            update_req_->setPose(e->id(), new_pose);
+            boost::shared_ptr<ed::TransformCache> t1(new ed::TransformCache());
+
+            // TODO: choose proper time
+            t1->insert(ed::Time(-1), new_pose);
+            update_req_->setRelation("map", e->id(), t1);
         }
         else
         {
