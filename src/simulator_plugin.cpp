@@ -1,29 +1,14 @@
 #include "simulator_plugin.h"
 
-#include <fast_simulator2/world.h>
-
 #include <ed/entity.h>
 #include <ed/world_model.h>
 #include <ed/update_request.h>
-#include <ed/models/models.h>
 #include <ed/relations/transform_cache.h>
 
 #include <ros/node_handle.h>
 #include <ros/advertise_service_options.h>
 
 #include <geolib/ros/msg_conversions.h>
-
-// Simulator
-#include <fast_simulator2/object.h>
-
-// ----------------------------------------------------------------------------------------------------
-
-void addToUpdateRequest(const sim::ObjectConstPtr& obj, ed::UpdateRequest& req)
-{
-//    e->setPose(obj->pose());
-    req.setType(obj->id(), obj->type());
-    req.setShape(obj->id(),  obj->shape());
-}
 
 // ----------------------------------------------------------------------------------------------------
 
@@ -65,8 +50,7 @@ void SimulatorPlugin::process(const ed::WorldModel& world, ed::UpdateRequest& re
     cb_queue_.callAvailable();
 
     // Step the simulator
-    std::vector<sim::ObjectConstPtr> changed_objects;
-    simulator_.step(0.01, changed_objects);
+    simulator_.step(0.01);
 
     if (reconfigured_)
     {
@@ -83,11 +67,11 @@ void SimulatorPlugin::process(const ed::WorldModel& world, ed::UpdateRequest& re
     }
     else
     {
-        // Only update all changed objects in the world model
-        for(std::vector<sim::ObjectConstPtr>::const_iterator it = changed_objects.begin(); it != changed_objects.end(); ++it)
-        {
-            addToUpdateRequest(*it, req);
-        }
+//        // Only update all changed objects in the world model
+//        for(std::vector<sim::ObjectConstPtr>::const_iterator it = changed_objects.begin(); it != changed_objects.end(); ++it)
+//        {
+//            addToUpdateRequest(*it, req);
+//        }
     }
 }
 
@@ -96,8 +80,8 @@ void SimulatorPlugin::process(const ed::WorldModel& world, ed::UpdateRequest& re
 bool SimulatorPlugin::srvSetEntity(ed::SetEntity::Request& req, ed::SetEntity::Response& res)
 {
     if (req.action == ed::SetEntity::Request::ADD)
-    {
-        if (!ed::models::create(req.id, req.type, *update_req_))
+    {        
+//        if (!ed::models::create(req.id, req.type, *update_req_))
             res.error_msg = "No shape could be loaded for type '" + req.type + "'.";
     }
     else if (req.action == ed::SetEntity::Request::DELETE)
